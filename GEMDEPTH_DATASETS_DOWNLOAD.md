@@ -24,16 +24,20 @@ Google Drive 配额、OneDrive）没法完全脚本化，脚本里写清楚了�
 
 ---
 
-## 1. VKITTI2（★训练必需，代码已支持）
+## 1. VKITTI2 —— ✅已有，不用下了
 
-```bash
-python3 scripts/download_vkitti2.py --target-dir /mnt/data/datasets/vkitti_2.0.3
-```
+**2026-07-27 查证**：Bosch 这边 `/home/izi2sgh/MYDATA/vkitti/` 已经是完整的 VKITTI2 数据，
+不用再跑 `download_vkitti2.py`。确认内容：
+- 5 个 scene 全（Scene01/02/06/18/20）× 10 种 variation 全
+  （15/30-deg-left/right、clone、fog、morning、overcast、rain、sunset）
+- 每个 variation 下 `Camera_0` + `Camera_1` 都有，`extrinsic.txt`/`info.txt` 齐全
+- 抽查 Scene01/sunset/Camera_0：447 帧 rgb 与 depth 一一对应
+- 总大小 30G（Scene01=2.5G/Scene02=1.7G/Scene06=1.9G/Scene18=3.6G/Scene20=5.4G）
 
-默认只下载 loader 需要的 3 个包：`rgb`(7GB) + `depth`(7.6GB) + `textgt`(23MB，含 extrinsic.txt)。
-分割/光流是可选项，默认不下（`--components classSegmentation instanceSegmentation forwardFlow ...` 手动加）。
+如果阿里云那边要用，直接把这份 30G 从 Bosch 传过去即可（不用再走官方下载）；
+`scripts/download_vkitti2.py` 脚本留着备用（比如以后要多拉 segmentation/flow 才用）。
 
-官方页面：https://europe.naverlabs.com/research/computer-vision/proxy-virtual-worlds-vkitti-2/
+官方页面（备查）：https://europe.naverlabs.com/research/computer-vision/proxy-virtual-worlds-vkitti-2/
 
 ## 2. TartanAir（★训练必需，代码已支持）
 
@@ -106,8 +110,33 @@ python3 scripts/download_vkitti.py --target-dir /mnt/data/datasets/vkitti_1.3.1
 
 ---
 
-## 建议的优先级
+## 建议的优先级（2026-07-27 更新：VKITTI2 已有，不用再下）
 
-1. **VKITTI2 + TartanAir** 先下 —— 代码现在就能直接拿来训练。
-2. 其余 5 个按你实际要不要扩 loader 再决定顺序；MVS-Synth/PointOdyssey 相对好搞定，
+1. **TartanAir** 先下 —— 唯一一个"代码已支持但还没数据"的，直接影响能不能训练。
+   Bosch 之前试过下载，全部 `Proxy tunneling failed`（代理墙挡死），只能走阿里云。
+2. 其余 5 个（VKITTI1.3.1 / MVS-Synth / PointOdyssey / Dynamic Replica / IRS）
+   按你实际要不要扩 loader 再决定顺序；MVS-Synth/PointOdyssey 相对好搞定，
    Dynamic Replica/IRS 卡在人工步骤，优先级可以放最后。
+3. ~~VKITTI2~~ 跳过，Bosch 本地已有完整 30G（见第 1 节），要用直接传数据，不用重下。
+
+## 一条命令下完剩下要下的（TartanAir + 其余 5 个，跳过 VKITTI2）
+
+```bash
+# 1) TartanAir（最优先）
+./scripts/download_tartanair.sh /mnt/data/datasets/tartanair
+
+# 2) VKITTI 1.3.1（旧格式，代码暂时用不到，按需下）
+python3 scripts/download_vkitti.py --target-dir /mnt/data/datasets/vkitti_1.3.1
+
+# 3) MVS-Synth
+./scripts/download_mvssynth.sh /mnt/data/datasets/mvs_synth 720
+
+# 4) PointOdyssey（Google Drive，可能要重跑几次续传）
+./scripts/download_pointodyssey.sh /mnt/data/datasets/point_odyssey
+
+# 5) Dynamic Replica —— 必须先手动去 https://dynamic-stereo.github.io/ 接受协议拿 links.json
+./scripts/download_dynamic_replica.sh /mnt/data/datasets/dynamic_replica ./links.json valid test real
+
+# 6) IRS（OneDrive，失败就浏览器手动下载再传服务器）
+./scripts/download_irs.sh /mnt/data/datasets/irs
+```
