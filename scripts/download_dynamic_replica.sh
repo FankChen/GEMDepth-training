@@ -50,6 +50,12 @@ fi
 cp "$LINKS_JSON" "$REPO_DIR/links.json"
 cd "$REPO_DIR"
 
+# The download script does `from dynamic_stereo.scripts.download_utils import ...`,
+# which requires the *parent* of the repo dir (so `dynamic_stereo` resolves as a
+# package) plus the repo dir itself on PYTHONPATH -- matches upstream README's
+# `export PYTHONPATH=$(cd ../ && pwd):$(pwd):$PYTHONPATH` instructions.
+export PYTHONPATH="$TARGET_DIR:$REPO_DIR:$PYTHONPATH"
+
 echo "[$(date)] Downloading Dynamic Replica splits: ${SPLITS[*]}"
 echo "Disk needed (unpacked): train=1.8T test=328G valid=106G real=152M"
 
